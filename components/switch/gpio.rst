@@ -92,27 +92,33 @@ or closes the gate. The relay simulates the button press for 500ms.
 Interlocking
 ------------
 
-In some cases it is necessary to ensure that two outputs are never active at the same time.
-ESPHome has a feature to prevent two GPIO Switches from being active at the same time called
+In some cases it is necessary to ensure that only one output from a group is active at the same time.
+ESPHome has a feature to prevent activating more than one GPIO Switch at the same time called
 interlocking. Just give *each switch* in the "interlocking group" an ``interlock`` option
-with a list of all the switches in the group.
+with a list of all the other switches in the group.
 
 .. code-block:: yaml
 
     # Example configuration entry
-    # Prevent relay #1 and relay #2 from being activated at the same time.
+    # Prevent relay #1, relay #2 and relay #3 from being activated at the same time.
     switch:
       - platform: gpio
         pin: GPIO25
         name: "Relay #1"
         id: relay1
-        interlock: [relay2]
+        interlock: [relay2, relay3]
 
       - platform: gpio
         pin: GPIO26
         name: "Relay #2"
         id: relay2
-        interlock: [relay1]
+        interlock: [relay1, relay3]
+        
+      - platform: gpio
+        pin: GPIO27
+        name: "Relay #3"
+        id: relay3
+        interlock: [relay1, relay2]
 
 Or with some YAML anchors you can further simplify the config:
 
@@ -123,7 +129,7 @@ Or with some YAML anchors you can further simplify the config:
       - platform: gpio
         # etc
         id: relay1
-        interlock: &interlock_group [relay1, relay2]
+        interlock: &interlock_group [relay1, relay2, relay3]
       - platform: gpio
         # etc
         id: relay2
@@ -132,7 +138,7 @@ Or with some YAML anchors you can further simplify the config:
 .. warning::
 
     These are software interlocks. As such, a software bug (which can *always* happen) can still
-    activate both switches at the same time. Similarly, at reset time (before any of ESPHome's code runs)
+    activate more than one switch at the same time. Similarly, at reset time (before any of ESPHome's code runs)
     the relay GPIO pins may have pull-ups active, so the relay may be active before ESPHome can manually
     deactivate them.
 
